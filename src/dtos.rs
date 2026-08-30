@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 // dtos - Data Transfer Objects
 use validator::{Validate, ValidationError};
 
-use crate::models::{ReceiveFileDetails, SendFileDetails, User};
+use crate::models::{ReceiveFileDetails, SentFileDetails, User};
 
 #[derive(Validate, Debug, Default, Clone, Serialize, Deserialize)]
 pub struct RegisterUserDto {
@@ -87,7 +87,7 @@ pub struct UserSendFileDto {
 }
 
 impl UserSendFileDto {
-    pub fn filter_send_user_file(file_data: &SendFileDetails) -> Self {
+    pub fn filter_send_user_file(file_data: &SentFileDetails) -> Self {
         Self {
             file_id: file_data.file_id.to_string(),
             file_name: file_data.file_name.to_owned(),
@@ -97,7 +97,7 @@ impl UserSendFileDto {
         }
     }
 
-    pub fn filter_send_user_files(user: &[SendFileDetails]) -> Vec<Self> {
+    pub fn filter_send_user_files(user: &[SentFileDetails]) -> Vec<Self> {
         user.iter().map(Self::filter_send_user_file).collect()
     }
 }
