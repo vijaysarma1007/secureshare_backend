@@ -1,45 +1,55 @@
+use crate::error::{ErrorMessage, HttpError};
 use axum::http::StatusCode;
 use chrono::{Duration, Utc};
+use jsonwebtoken::{
+    DecodingKey, EncodingKey, Header, Validation, decode, encode,
+    errors::{Error, ErrorKind},
+};
 use serde::{Deserialize, Serialize};
-use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode, errors::{Error, ErrorKind}};
-use crate::error::{ErrorMessage, HttpError};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TokenClaims {
     pub sub: String,
     pub iat: usize,
-    pub exp: usize
+    pub exp: usize,
 }
 
-pub fn create_token (
+pub fn create_token(
     user_id: &str,
     secret: &[u8],
-    expires_in_seconds: i64
+    expires_in_seconds: i64,
 ) -> Result<String, Error> {
-        if user_id.is_empty() {
-            return  Err(ErrorKind::InvalidSubject.into());
-        }
+    if user_id.is_empty() {
+        return Err(ErrorKind::InvalidSubject.into());
+    }
 
-        let now = Utc::now();
-        let iat = now.timestamp() as usize;
-        let exp = (now + Duration::minutes(expires_in_seconds)).timestamp() as usize;
-        let claims = TokenClaims {
-            sub: user_id.to_string(),
-            iat,
-            exp
-        };
+    let now = Utc::now();
+    let iat = now.timestamp() as usize;
+    let exp = (now + Duration::minutes(expires_in_seconds)).timestamp() as usize;
+    let claims = TokenClaims {
+        sub: user_id.to_string(),
+        iat,
+        exp,
+    };
 
-        encode(&Header::default(), &claims, &EncodingKey::from_secret(secret))
+    encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(secret),
+    )
 }
 
-pub fn decode_token<T:Into<String>> (
-    token: T,
-    secret: &[u8]
-) -> Result<String, HttpError> {
-    let decode = decode::<TokenClaims>(&token.into(), &DecodingKey::from_secret(secret), &Validation::new(jsonwebtoken::Algorithm::HS256));
+pub fn decode_token<T: Into<String>>(token: T, secret: &[u8]) -> Result<String, HttpError> {
+    let decode = decode::<TokenClaims>(
+        &token.into(),
+        &DecodingKey::from_secret(secret),
+        &Validation::new(jsonwebtoken::Algorithm::HS256),
+    );
 
     match decode {
         Ok(token) => Ok(token.claims.sub),
-        Err(_) => Err(HttpError::unauthorized(ErrorMessage::InvalidToken.to_string()))
+        Err(_) => Err(HttpError::unauthorized(
+            ErrorMessage::InvalidToken.to_string(),
+        )),
     }
 }
