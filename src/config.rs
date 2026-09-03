@@ -17,7 +17,7 @@ impl Config {
             database_url,
             jwt_secret,
             jwt_maxage: jwt_maxage.parse::<i64>().unwrap(),
-            port: 8000,
+            port: 3001,
         }
     }
 }
