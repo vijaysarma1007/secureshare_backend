@@ -3,6 +3,7 @@ mod db;
 mod dtos;
 mod error;
 mod models;
+mod utils;
 
 use axum::{
     Router,
@@ -54,7 +55,7 @@ async fn main() {
         }
     };
 
-    // cross origin resousce sharing: allows connetion of api with the frontend app 
+    // cross origin resousce sharing: allows connetion of api with the frontend app
     let cors = CorsLayer::new()
         .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
         .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE])
@@ -99,7 +100,6 @@ async fn main() {
         "{}",
         format!("Server is running on http::localhost:{}", &config.port)
     );
-
 
     //Router
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", &config.port))
