@@ -50,7 +50,8 @@ pub async fn auth(
         }
     };
 
-    let user_id = uuid::Uuid::parse_str(&token_details.to_string()).unwrap();
+    let user_id = uuid::Uuid::parse_str(&token_details.to_string())
+        .map_err(|_| HttpError::unauthorized(ErrorMessage::InvalidToken.to_string()))?;
 
     let user = app_state
         .db_client
