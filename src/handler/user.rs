@@ -9,9 +9,22 @@ use crate::{
     middleware::JWTAuthMiddleware,
     utils::password,
 };
-use axum::{Extension, Json, extract::Query, response::IntoResponse};
+use axum::{
+    Extension, Json, Router,
+    extract::Query,
+    response::IntoResponse,
+    routing::{get, post, put},
+};
 use std::sync::Arc;
 use validator::Validate;
+
+pub fn users_handler() -> Router {
+    Router::new()
+        .route("me", get(get_me))
+        .route("/name", put(update_user_name))
+        .route("/password", put(update_user_password))
+        .route("/search-emails", get(search_by_email))
+}
 
 pub async fn get_me(
     Extension(_app_state): Extension<Arc<AppState>>,
