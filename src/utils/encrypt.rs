@@ -9,7 +9,6 @@ use rand;
 use rsa::{Pkcs1v15Encrypt, RsaPublicKey, rand_core::OsRng};
 
 type Aes256CbcEnc = cbc::Encryptor<Aes256>;
-type Aes256CbcDec = cbc::Decryptor<Aes256>;
 
 pub fn encrypt_file(
     file_data: &[u8],
