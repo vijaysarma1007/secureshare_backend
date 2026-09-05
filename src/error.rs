@@ -30,6 +30,7 @@ pub enum ErrorMessage {
     EmailExist,
     UserNoLongerExist,
     TokenNotProvided,
+    InvalidOldPassword,
 }
 
 impl ToString for ErrorMessage {
@@ -56,6 +57,7 @@ impl ErrorMessage {
             ErrorMessage::TokenNotProvided => {
                 "You are not logged in, please provide a token".to_string()
             }
+            ErrorMessage::InvalidOldPassword => "Incorrect Old Password".to_string(),
         }
     }
 }

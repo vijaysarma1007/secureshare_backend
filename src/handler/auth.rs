@@ -6,13 +6,20 @@ use crate::{
     utils::{keys::generate_key, password, token},
 };
 use axum::{
-    Extension, Json, handler,
+    Extension, Json, Router,
     http::{HeaderMap, StatusCode, header},
     response::IntoResponse,
+    routing::post,
 };
 use axum_extra::extract::cookie;
 use std::sync::Arc;
 use validator::Validate;
+
+pub fn auth_handler() -> Router {
+    Router::new()
+        .route("/register", post(register))
+        .route("/login", post(login))
+}
 
 //register a user
 pub async fn register(
