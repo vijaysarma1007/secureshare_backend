@@ -141,6 +141,12 @@ pub struct UserReceiveFileListResponseDto {
     pub results: i64,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UserLoginResponseDto {
+    pub status: String,
+    pub token: String,
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct Response {
     pub status: &'static str,
