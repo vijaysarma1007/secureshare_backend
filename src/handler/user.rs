@@ -13,7 +13,7 @@ use axum::{
     Extension, Json, Router,
     extract::Query,
     response::IntoResponse,
-    routing::{get, post, put},
+    routing::{get, put},
 };
 use std::sync::Arc;
 use validator::Validate;
