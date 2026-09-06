@@ -86,7 +86,7 @@ async fn main() {
                 if let Err(err) = db_client.delete_expired_files().await {
                     eprintln!("Error deleteing expired files: {:?}", err);
                 } else {
-                    println!("Successfullydeleted expired files.");
+                    println!("Successfully deleted expired files.");
                 }
             })
         }
