@@ -8,6 +8,8 @@ mod models;
 mod router;
 mod utils;
 
+use std::sync::Arc;
+
 use axum::{
     Router,
     http::{
@@ -23,7 +25,7 @@ use tokio_cron_scheduler::{Job, JobScheduler};
 use tower_http::cors::CorsLayer;
 use tracing_subscriber::filter::LevelFilter;
 
-use crate::db::UserExt;
+use crate::{db::UserExt, router::create_router};
 
 #[derive(Debug, Clone)]
 pub struct AppState {
@@ -98,7 +100,8 @@ async fn main() {
         sched.start().await.unwrap();
     });
 
-    let app: Router = Router::new().layer(cors);
+    let app: Router = create_router(Arc::new(app_state.clone())).layer(cors.clone());
+
     println!(
         "{}",
         format!("Server is running on http::localhost:{}", &config.port)
