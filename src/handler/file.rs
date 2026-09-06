@@ -1,18 +1,35 @@
 use crate::{
     AppState,
     db::UserExt,
-    dtos::{FileUploadDtos, Response},
+    dtos::{FileUploadDtos, Response, RetrieveFileDto},
     error::HttpError,
     middleware::JWTAuthMiddleware,
-    utils::{encrypt::encrypt_file, password},
+    utils::{decrypt::decrypt_file, encrypt::encrypt_file, password},
 };
-use axum::{Extension, Json, response::IntoResponse};
+use axum::{
+    Extension, Json, Router,
+    body::Body,
+    http::{Response as AxumResponse, StatusCode},
+    response::IntoResponse,
+    routing::post,
+};
 use axum_extra::extract::Multipart;
 use base64::{Engine, engine::general_purpose::STANDARD};
 use chrono::{DateTime, Utc};
-use rsa::{RsaPublicKey, pkcs1::DecodeRsaPublicKey};
-use std::sync::Arc;
+use rsa::{
+    RsaPrivateKey, RsaPublicKey,
+    pkcs1::{DecodeRsaPrivateKey, DecodeRsaPublicKey},
+};
+use std::{fs, path::PathBuf, sync::Arc};
 use validator::Validate;
+
+const PRIVATE_KEY_DIR: &str = "assests/private_keys";
+
+pub fn file_handler() -> Router {
+    Router::new()
+        .route("/upload", post(upload_files))
+        .route("/retrieve", post(retrieve_file))
+}
 
 pub async fn upload_files(
     Extension(app_state): Extension<Arc<AppState>>,
@@ -113,4 +130,82 @@ pub async fn upload_files(
     };
 
     Ok(Json(response))
+}
+
+pub async fn retrieve_file(
+    Extension(app_state): Extension<Arc<AppState>>,
+    Extension(user): Extension<JWTAuthMiddleware>,
+    Json(body): Json<RetrieveFileDto>,
+) -> Result<impl IntoResponse, HttpError> {
+    body.validate()
+        .map_err(|e| HttpError::bad_request(e.to_string()))?;
+
+    let user_id = uuid::Uuid::parse_str(&user.user.id.to_string()).unwrap();
+    let shared_id = uuid::Uuid::parse_str(&body.shared_id.to_string()).unwrap();
+
+    let shared_result = app_state
+        .db_client
+        .get_shared(shared_id, user_id.clone())
+        .await
+        .map_err(|e| HttpError::server_error(e.to_string()))?;
+
+    let shared_data = shared_result.ok_or_else(|| {
+        HttpError::bad_request("The requested shared link either does not exist or has expired.")
+    })?;
+
+    let match_password = password::compare(&body.password, &shared_data.password)
+        .map_err(|e| HttpError::server_error(e.to_string()))?;
+
+    if !match_password {
+        return Err(HttpError::bad_request(
+            "The provided password is incorrect".to_string(),
+        ));
+    };
+
+    let file_id = match shared_data.file_id {
+        Some(id) => id,
+        None => {
+            return Err(HttpError::bad_request("File Id Is missing".to_string()));
+        }
+    };
+
+    let file_result = app_state
+        .db_client
+        .get_file(file_id)
+        .await
+        .map_err(|e| HttpError::server_error(e.to_string()))?;
+
+    let file_data = file_result.ok_or_else(|| {
+        HttpError::bad_request(
+            "The requested file wither does not exist or has expired.".to_string(),
+        )
+    })?;
+
+    let mut path = PathBuf::from(PRIVATE_KEY_DIR);
+    path.push(format!("{}.pem", user_id));
+
+    let private_key =
+        fs::read_to_string(&path).map_err(|e| HttpError::server_error(e.to_string()))?;
+
+    let privatye_key_pem = RsaPrivateKey::from_pkcs1_pem(&private_key)
+        .map_err(|e| HttpError::server_error(e.to_string()))?;
+
+    let decrypted_file = decrypt_file(
+        &file_data.encrypted_aes_key,
+        &file_data.encrypted_file,
+        &file_data.iv,
+        &privatye_key_pem,
+    )?;
+
+    let response = AxumResponse::builder()
+        .status(StatusCode::OK)
+        .header(
+            "Content_Disposition",
+            format!("attachment; filename=\"{}\"", file_data.file_name),
+        )
+        .header("Content-Type", "application/octet-stream")
+        .body(Body::from(decrypted_file))
+        .map_err(|e| HttpError::server_error(e.to_string()))?;
+
+    Ok(response)
 }
