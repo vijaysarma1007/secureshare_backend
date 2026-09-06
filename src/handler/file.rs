@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use crate::{
     AppState,
     db::UserExt,
@@ -12,6 +11,7 @@ use axum_extra::extract::Multipart;
 use base64::{Engine, engine::general_purpose::STANDARD};
 use chrono::{DateTime, Utc};
 use rsa::{RsaPublicKey, pkcs1::DecodeRsaPublicKey};
+use std::sync::Arc;
 use validator::Validate;
 
 pub async fn upload_files(
