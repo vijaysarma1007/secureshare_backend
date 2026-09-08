@@ -35,13 +35,12 @@ export const {
 
         if (res.ok && data.token) {
           return {
-            id: data.user?.id || data.id,
-            email: credentials?.email,
+            id: String(data.user?.id || data.id),
+            email: (credentials?.email as string) || null,
             token: data.token,
           };
-        } else {
-          return null;
         }
+        return null;
       },
     }),
   ],
