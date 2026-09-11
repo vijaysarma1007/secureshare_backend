@@ -1,5 +1,7 @@
-function Login() {
-  return <div>login</div>;
+import { LoginForm } from "@/components/auth/LoginForm";
+
+function LoginPage() {
+  return <LoginForm />;
 }
 
-export default Login;
+export default LoginPage;
