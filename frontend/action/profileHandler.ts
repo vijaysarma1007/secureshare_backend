@@ -1,3 +1,5 @@
+"use server";
+
 import { withActionHandler } from "@/components/utils/ActionUtils";
 import { GlobalApiCall } from "@/components/utils/GlobalApiCalls";
 
