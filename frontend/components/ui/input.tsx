@@ -38,7 +38,11 @@ function Input({
           onClick={handleTogglePassword}
           className="absolute inset-y-0 right-3 flex items-center text-sm focus:outline-none"
         >
-          {showPassword ? <Eye /> : <EyeOff />}
+          {showPassword ? (
+            <Eye className="cursor-pointer" />
+          ) : (
+            <EyeOff className="cursor-pointer" />
+          )}
         </button>
       )}
     </div>

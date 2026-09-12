@@ -45,7 +45,6 @@ export const LoginForm = () => {
   } = form;
 
   const onSubmit = (values: LoginFormValues) => {
-    console.log("values", values);
     startTransition(() => {
       LoginApi(values)
         .then((response) => {
@@ -70,7 +69,7 @@ export const LoginForm = () => {
         <CardHeader>
           <CardTitle className="font-bold">Sign In</CardTitle>
           <CardDescription>
-            Enter your details below to log into your account
+            Enter your details below to log into your account.
           </CardDescription>
         </CardHeader>
         <form
@@ -79,10 +78,6 @@ export const LoginForm = () => {
         >
           <div className="space-y-4">
             <FieldSet>
-              <FieldLegend className="font-bold">Sign in</FieldLegend>
-              <FieldDescription>
-                Enter your email and password to login.
-              </FieldDescription>
               <FieldGroup>
                 {/* Email Field */}
                 <Field>
