@@ -26,7 +26,6 @@ export const GlobalApiCall = async ({
   try {
     const session = await getCurrentUserServer();
     const token = session?.accessToken ?? null;
-
     const response = await fetch(url, {
       ...options,
       credentials: "include",

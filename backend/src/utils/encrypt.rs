@@ -10,7 +10,7 @@ use rsa::{Pkcs1v15Encrypt, RsaPublicKey, rand_core::OsRng};
 
 type Aes256CbcEnc = cbc::Encryptor<Aes256>;
 
-pub fn encrypt_file(
+pub async fn encrypt_file(
     file_data: &[u8],
     user_public_key: &RsaPublicKey,
 ) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>), HttpError> {

@@ -1,6 +1,3 @@
-use axum::{Extension, Json, Router, extract::Query, response::IntoResponse, routing::get};
-use validator::Validate;
-use std::sync::Arc;
 use crate::{
     AppState,
     db::UserExt,
@@ -11,6 +8,9 @@ use crate::{
     error::HttpError,
     middleware::JWTAuthMiddleware,
 };
+use axum::{Extension, Json, Router, extract::Query, response::IntoResponse, routing::get};
+use std::sync::Arc;
+use validator::Validate;
 
 pub fn get_file_list_handler() -> Router {
     Router::new()

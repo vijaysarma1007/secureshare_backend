@@ -60,7 +60,7 @@ export const CellAction = ({ data, token }: CellActionProps) => {
     setIsLoading(true);
     try {
       const response = await fetch(
-        "http://localhost:8000/api/file/retrieve",
+        "http://localhost:3001/api/file/retrieve",
         {
           method: "POST",
           headers: {

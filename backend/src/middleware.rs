@@ -36,8 +36,9 @@ pub async fn auth(
                         None
                     }
                 })
-        });
-
+        })
+        .filter(|t| !t.is_empty() && t != "undefined" && t != "null");
+    println!("cookies: {:?}", cookies);
     let token = cookies
         .ok_or_else(|| HttpError::unauthorized(ErrorMessage::TokenNotProvided.to_string()))?;
 

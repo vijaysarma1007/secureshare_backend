@@ -2,16 +2,24 @@ import { receive_file_list } from "@/action/fileHandler";
 import { Receive } from "./_components/Receive";
 import { auth } from "@/auth";
 
-const ReceivePage = async ({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
-}) => {
+interface PageProps {
+  searchParams: Promise<{
+    [key: string]: string | string[] | undefined;
+  }>;
+}
+
+const ReceivePage = async ({ searchParams }: PageProps) => {
+  // 1. Await the searchParams Promise
+  const resolvedSearchParams = await searchParams;
+
+  // 2. Safely parse page and limit from resolved searchParams
   const fileData = await receive_file_list({
-    page: Number(searchParams.page) || 1,
-    limit: Number(searchParams.limit) || 10,
+    page: Number(resolvedSearchParams.page) || 1,
+    limit: Number(resolvedSearchParams.limit) || 10,
   });
+
   const session = await auth();
+
   return (
     <div className="p-4">
       <Receive

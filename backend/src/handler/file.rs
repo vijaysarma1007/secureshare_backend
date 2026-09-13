@@ -19,6 +19,7 @@ use chrono::{DateTime, Utc};
 use rsa::{
     RsaPrivateKey, RsaPublicKey,
     pkcs1::{DecodeRsaPrivateKey, DecodeRsaPublicKey},
+    pkcs8::DecodePublicKey,
 };
 use std::{fs, path::PathBuf, sync::Arc};
 use validator::Validate;
@@ -76,26 +77,47 @@ pub async fn upload_files(
         .get_user(None, None, Some(&form_data.recipient_email))
         .await
         .map_err(|e| HttpError::server_error(e.to_string()))?;
-
     let recipient_user =
         recipient_result.ok_or(HttpError::bad_request("Recipient user not found"))?;
 
-    let public_key_str = match &recipient_user.public_key {
-        Some(key) => key,
-        None => return Err(HttpError::bad_request("Receipient has no public key")),
-    };
+    let public_key_str = recipient_user
+        .public_key
+        .as_ref()
+        .ok_or_else(|| HttpError::bad_request("Recipient has no public key"))?;
 
     let public_key_bytes = STANDARD
         .decode(public_key_str)
-        .map_err(|e| HttpError::server_error(e.to_string()))?;
+        .map_err(|e| HttpError::server_error(format!("Base64 decode error: {}", e)))?;
 
-    let public_key =
-        String::from_utf8(public_key_bytes).map_err(|e| HttpError::server_error(e.to_string()))?;
+    let raw_str = String::from_utf8(public_key_bytes.clone())
+        .map_err(|e| HttpError::server_error(format!("UTF-8 decode error: {}", e)))?;
 
-    let public_key_pem = RsaPublicKey::from_pkcs1_pem(&public_key)
-        .map_err(|e| HttpError::server_error(e.to_string()))?;
+    let clean_pem = raw_str
+        .trim()
+        .trim_matches('"') // Remove accidental surrounding double quotes
+        .replace("\\n", "\n") // Replace literal \n string with actual line breaks
+        .replace("\r", "");
 
-    let (encrypyted_aes_key, encrypyted_data, iv) = encrypt_file(&file_data, &public_key_pem)?;
+    println!(
+        "--- DEBUG CLEAN PEM START ---\n{}\n--- DEBUG CLEAN PEM END ---",
+        clean_pem
+    );
+
+    let public_key_pem = RsaPublicKey::from_public_key_pem(&clean_pem)
+        .or_else(|_| RsaPublicKey::from_pkcs1_pem(&clean_pem))
+        .or_else(|_| RsaPublicKey::from_public_key_der(&public_key_bytes))
+        .or_else(|_| RsaPublicKey::from_pkcs1_der(&public_key_bytes))
+        .map_err(|e| {
+            HttpError::server_error(format!(
+                "Failed to parse public key in any format (PEM/DER/PKCS#1/PKCS#8): {}",
+                e
+            ))
+        })?;
+
+    println!("{:?}", public_key_pem);
+
+    let (encrypyted_aes_key, encrypyted_data, iv) =
+        encrypt_file(&file_data, &public_key_pem).await?;
 
     let user_id = uuid::Uuid::parse_str(&user.user.id.to_string()).unwrap();
 
