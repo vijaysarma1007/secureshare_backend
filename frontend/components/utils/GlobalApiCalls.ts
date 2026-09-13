@@ -38,19 +38,19 @@ export const GlobalApiCall = async ({
     });
 
     if (response.status === 401) {
-      throw new RedirectError(302, "/logout", "session expired");
+      throw new RedirectError(302, "/login", "session expired");
     }
 
     if (!response.ok) {
-      const errorTask = await response.text();
+      const errorText = await response.text();
       throw new Error(
-        `HTTP error! status: ${response.status}, message:${errorTask}`,
+        `HTTP error! status: ${response.status}, message: ${errorText}`,
       );
     }
 
     return await response.json();
   } catch (error) {
-    console.error("fetch error: ", error);
+    console.error("fetch Error:", error);
     throw error;
   }
 };

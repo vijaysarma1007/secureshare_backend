@@ -1,6 +1,6 @@
 use axum::{Extension, Json, Router, extract::Query, response::IntoResponse, routing::get};
 use validator::Validate;
-
+use std::sync::Arc;
 use crate::{
     AppState,
     db::UserExt,
@@ -20,7 +20,7 @@ pub fn get_file_list_handler() -> Router {
 
 pub async fn get_user_shared_files(
     Query(query_params): Query<RequestQueryDto>,
-    Extension(app_state): Extension<AppState>,
+    Extension(app_state): Extension<Arc<AppState>>,
     Extension(user): Extension<JWTAuthMiddleware>,
 ) -> Result<impl IntoResponse, HttpError> {
     query_params
@@ -52,7 +52,7 @@ pub async fn get_user_shared_files(
 
 pub async fn get_receive_shared_files(
     Query(query_params): Query<RequestQueryDto>,
-    Extension(app_state): Extension<AppState>,
+    Extension(app_state): Extension<Arc<AppState>>,
     Extension(user): Extension<JWTAuthMiddleware>,
 ) -> Result<impl IntoResponse, HttpError> {
     query_params
